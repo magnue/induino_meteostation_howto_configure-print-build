@@ -100,7 +100,7 @@ Next is to select witch sensor we should use for ambient temperature. In my inst
 
 ![define-t](media/induinoMETEO/3-define_T.png)
 
-Using a different pin for DHT22?, then update here.
+Using a different pin for DHT22? Then update here.
 
 ![define-dhtpin](media/induinoMETEO/4-define_DHTPIN.png)
 
@@ -156,18 +156,25 @@ To get meteostationWEB up from here, then.
 
 __Install dependencies__
 
-`sudo apt-get install python-rrdtool python-simplejson python-uTidylib`
+`sudo apt-get install python-rrdtool python-simplejson python-utidylib`
 
 __Copy the meteostationWEB folder to your home directory.__
 
 `cp -r indi/3rdparty/indi-duino/add-on/meteostationWEB ~/`
 
-__Create symlink to html directory. This assumes default html directory = /var/www, it could also be /var/www/html__
+__Create CHART folder and set permission__
+
+```
+mkdir ~/meteostationWEB/html/CHART
+chmod 775 ~/meteostationWEB/html/CHART
+```
+
+__Create symlink to html directory. This assumes default apache root directory = /var/www, it could also be /var/www/html__
 
 ```bash
 # Do not use ~/meteostationWEB or $HOME/meteostationWEB the symlink needs fullpath
 sudo ln -s /home/you/meteostationWEB/html /var/www/meteo
-sudo chown -R you:www-data ~/meteostationWEB/html
+sudo chown -R [you]:www-data ~/meteostationWEB/html
 ```
 
 __Reload apache__
@@ -178,23 +185,158 @@ sudo systemctl reload apache2.service
 
 You should now edit the file ~/meteostationWEB/meteoconfig.py and set your defaults and indi connection options.
 
-TODO: defaults and connection options.
+**Connection**
 
+For connecting to, and starting indiserver on localhost, there are no need to change connection settings.
+
+```bash
+#1). Local
+#by defining INDISERVER as localhost,
+#and leaving INDITUNNEL="false",
+#then indiserver will be started locally on port INDIPORT
+INDISERVER="localhost"
+INDITUNNEL="false"
+INDISTARTREMOTE="false"
+INDIPORT="7624"
+```
+
+To connect to indiserver running on a different host on the same network, then edit #2). Remote, and comment out #1). Local
+(You should allways comment out the configs not used).
+
+```bash
+#2). Remote
+#by defining INDISERVER with hostname,
+#and leaving INDITUNNEL="false",
+#meteostationWEB will connect to indiserver at INDISERVER:INDIPORT
+INDISERVER="192.168.10.123"
+INDITUNNEL="false"
+INDISTARTREMOTE="false"
+INDIPORT="7624" # Edit this if indiserver has been started on non default port
+```
+
+To start and connect to indiserver on any remote host, with ssh passwordless keys and up to date indi.
+
+```bash
+#3). Tunnel with indistartup
+#by defining INDISERVER as localhost,
+#and setting INDITUNNEL="true" and INDISTARTREMOTE="true",
+#then meteostationWEB will open a ssh connection to SSHSERVER:SSHPORT,
+#and start indiserver on remote machine on INDIREMOTEPORT,
+#and tunnel indiserver to INDISERVER:INDIPORT
+INDISERVER="localhost"     # You should not change this
+INDITUNNEL="true"
+INDIPORT="7624"            # The port that will be used for indiserver on localhost
+INDIREMOTEPORT="7624"      # The port indiserver is running on the remote host
+INDISTARTREMOTE="true"
+SSHSERVER="indiserver.mydomain.com"
+SSHPORT="22"
+```
+
+To connect to indiserver running on any other host with, ssh passwordless keys enabled.
+Mostly the same settings as #3).
+
+```bash
+#4). Tunnel with allready started indiserver
+#by defining INDISERVER as localhost,
+#and setting INDITUNNEL="true" and INDISTARTREMOTE="false",
+#then meteostationWEB will open a ssh connection to SSHSERVER:SSHPORT,
+#and tunnel indiserver on remote machine running on INDIREMOTEPORT to INDISERVER:INDIPORT
+INDISERVER="localhost"
+INDITUNNEL="true"
+INDIPORT="7624"
+INDIREMOTEPORT="7624"
+INDISTARTREMOTE="false"
+SSHSERVER="indiserver.mydomain.com"
+SSHPORT="22"
+```
+
+IN INDI SETTING AND DEBUG you should set what the device port is
+
+```bash
+##### INDI SETTINGS AND DEBUG #####
+#1). Basic indi
+INDIDEVICE="MeteoStation"
+INDIDEVICEPORT="/dev/ttyUSB0"
+```
+
+And finnaly for connection, you should set the path of your ssh key, and your ssh host username, (if you are using ssh).
+
+```bash
+##### SSH TUNNEL AN INDI EXEC #####
+#Should only need to edit #1), and only if using ssh
+#1). Key and user
+SSHKEYDIR="~/.ssh/id_rsa"
+SSHUSERNAME="magnus_e"
+```
+
+**Defaults**
+
+You should atleast set the site related defaults. The RRD Related options is for the Advanced tab, to get expanded weather for your area.
+
+```bash
+##### SITE RELATED ####
+OWNERNAME="Nacho Mas"
+SITENAME="MADRID"
+ALTITUDE=630
+#Visit http://weather.uwyo.edu/upperair/sounding.html
+#See the sounding location close your site
+SOUNDINGSTATION="08221"
+
+##### RRD RELATED #####
+#PATH TO GRAPHs
+CHARTPATH="./html/CHART/"
+#EUMETSAT lastimagen. Choose one from:
+#http://oiswww.eumetsat.org/IPPS/html/latestImages.html
+#This is nice but only work at daylight time:
+#EUMETSAT_LAST="http://oiswww.eumetsat.org/IPPS/html/latestImages/EUMETSAT_MSG_RGB-naturalcolor-westernEurope.jpg"
+#This show rain
+#EUMETSAT_LAST="http://oiswww.eumetsat.org/IPPS/html/latestImages/EUMETSAT_MSG_MPE-westernEurope.jpg"
+#and this cloud cover at IR 39. Work at night
+EUMETSAT_LAST="http://oiswww.eumetsat.org/IPPS/html/latestImages/EUMETSAT_MSG_IR039E-westernEurope.jpg"
+```
+
+**The meteostationWEB user interface**
 
 The index shows the current METEO status.
 
 ![meteoweb-gauges](media/meteostationWEB/1-meteoweb_gauges.png)
 
-Graps of METEO data, ranging from 2 hours to 1 month back.
+Graps of METEO data, ranging from 3 hours to 1 month back.
 
 ![meteoweb-graphs](media/meteostationWEB/2-meteoweb_graphs.png)
 
 
 <a name="meteostationprint"></a>
 ## Printing and assembling the MeteoStation printable hardware
+
+![meteoprint-full](media/meteostationPRINT/1-MeteoStation-full.jpg)
+
 Download the [3d printable MeteoStation on thingiverse](https://www.thingiverse.com/thing:2371144)
 
-TODO: some usefull printing instructions.
+If you do not have a 3d printer, you can get the parts printet trough a service like [3D Hubs](https://www.3dhubs.com/).
+
+Sumirizing the build steps.
+
+- You need approximately 125m of PETG, 2.65m of TPU and 1.25m of PLA to print this housing.
+- Where there are several versions for one part, allways print the one with highest version number.
+- Use pictures as assembly guide. (More pictures on thingiverse)
+- Sensors for temperature and humidity goes in the 'wind tunnel' betwean the bottom and middle part.
+- IR Radiance sensor mounts under the acryllic glass, and the IR sensor in the opening of the top part.
+- You need 2mm thick 9x5 cm acryllic perspex glass, that can be worked on with wood tools.
+- Use the part MeteoStation-windowTemplate printed in PLA as a guide to cut the glass to size, and cut holes.
+
+Screws used are all countersunk, and here is 4x 4x50mm + 6x 4x15mm
+
+Finished product is close to 10 cm^3
+
+![meteoprint-finishing-1](media/meteostationPRINT/2-finishing_1.jpg)
+
+![meteoprint-finishing-2](media/meteostationPRINT/3-finishing_2.jpg)
+
+![meteoprint-finishing-3](media/meteostationPRINT/4-finishing_3.jpg)
+
+![meteoprint-done](media/meteostationPRINT/5-done.jpg)
+
 
 <a name="usefullinks"></a>
 ## Links to sensors, printable hardware and resources
@@ -206,14 +348,16 @@ TODO: some usefull printing instructions.
     * [PETG - approx 125m](https://3dnet.no/collections/1-75/products/petg-1-75-1-0-kg?variant=9139275075)
     * [TPU  - approx 2.65m](https://3dnet.no/collections/1-75/products/tpe-1-75-0-5-kg?variant=1060433999)
     * [PLA - approx 1.25m](https://3dnet.no/collections/1-75/products/pla-1-75)
-4. Banggood sensors + misc
+4. 3d printing service
+    * [3D Hubs](https://www.3dhubs.com/)
+5. Banggood sensors + misc
     * [Acrylic Perspex 2mm thickness](https://www.banggood.com/100x100mm-Acrylic-Perspex-Sheet-Cutting-Panel-Plastic-Satin-Gloss-for-Construction-p-1154629.html?rmmds=search)
     * [USB to TTL](https://www.banggood.com/USB-To-TTL-Debug-Serial-Port-Cable-For-Raspberry-Pi-3B-2B-COM-Port-p-1055396.html?rmmds=search)
     * [Solar panel max 25 x 55mm](https://www.banggood.com/Solar-panel-LED-Spike-Spot-Light-Landscape-Garden-Yard-Path-Lawn-Outdoor-Solar-Lamps-p-1148114.html?rmmds=detail-left-hotproducts)
     * [BMP 180](https://www.banggood.com/BMP180-Digital-Barometric-Pressure-Sensor-Module-Board-p-930690.html?rmmds=search)
     * [DHT 22 AM2302](https://www.banggood.com/Digital-DHT22-AM2302-Temperature-Humidity-Sensor-Module-For-Arduino-p-965081.html?rmmds=search)
     * [MLX90614ESF](https://www.banggood.com/MLX90614ESF-AAA-Non-contact-Human-Body-Infrared-IR-Temperature-Sensor-Module-For-Arduino-p-1100990.html?rmmds=search)
-5. Recources
+6. Recources
     * [Arduino IDE](https://www.arduino.cc/en/Main/Software)
     * [Pinouts](https://learn.adafruit.com/introducing-pro-trinket/pinouts)
     * [FTDI](https://learn.adafruit.com/introducing-pro-trinket/using-ftdi)
