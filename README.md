@@ -310,6 +310,11 @@ Graps of METEO data, ranging from 3 hours to 1 month back.
 
 ![meteoweb-graphs](media/meteostationWEB/2-meteoweb_graphs.png)
 
+EU MET SAT images for your sounding station
+
+![meteoweb-graphs](media/meteostationWEB/3-meteoweb_external.png)
+
+
 
 <a name="meteostationprint"></a>
 ## Printing and assembling the MeteoStation printable hardware
