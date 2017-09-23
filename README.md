@@ -142,7 +142,12 @@ Double check that all sensors report a value in the 'Raw Sensors' tab, and the M
 
 ![indiduino-meteo](media/indiDUINO/3-indiduino_meteo.png)
 
+If you have fields in the METEO tab without any data, and you have confirmed that meteoTEST is working, then considure this.
 
+The numerical data sendt from the arduino to the indi_duino driver uses some 'virual' analog pins.
+Analog pins in arduino has a name pin A0 to An, and these could be mapped differently on your arduino if you are not using a Trinket Pro.
+
+Change the pinnumbers in /usr/local/share/indi/meteostation_sk.xml for numeriacl values, to match your pinmapping.
 
 <a name="meteostationweb"></a>
 ## Connecting meteostationWEB to induinoMETEO, and serving trough Apache
@@ -275,12 +280,12 @@ You should atleast set the site related defaults. The RRD Related options is for
 
 ```bash
 ##### SITE RELATED ####
-OWNERNAME="Nacho Mas"
-SITENAME="MADRID"
-ALTITUDE=630
+OWNERNAME="Magnus W. Eriksen"
+SITENAME="Observatory17b.com"
+ALTITUDE=10
 #Visit http://weather.uwyo.edu/upperair/sounding.html
 #See the sounding location close your site
-SOUNDINGSTATION="08221"
+SOUNDINGSTATION="ENZV"
 
 ##### RRD RELATED #####
 #PATH TO GRAPHs
@@ -288,11 +293,11 @@ CHARTPATH="./html/CHART/"
 #EUMETSAT lastimagen. Choose one from:
 #http://oiswww.eumetsat.org/IPPS/html/latestImages.html
 #This is nice but only work at daylight time:
-#EUMETSAT_LAST="http://oiswww.eumetsat.org/IPPS/html/latestImages/EUMETSAT_MSG_RGB-naturalcolor-westernEurope.jpg"
+#EUMETSAT_LAST="http://oiswww.eumetsat.org/IPPS/html/latestImages/EUMETSAT_MSG_RGBNatColour_WesternEurope.jpg"
 #This show rain
-#EUMETSAT_LAST="http://oiswww.eumetsat.org/IPPS/html/latestImages/EUMETSAT_MSG_MPE-westernEurope.jpg"
+EUMETSAT_LAST="http://oiswww.eumetsat.org/IPPS/html/latestImages/EUMETSAT_MSG_MPE_WesternEurope.png"
 #and this cloud cover at IR 39. Work at night
-EUMETSAT_LAST="http://oiswww.eumetsat.org/IPPS/html/latestImages/EUMETSAT_MSG_IR039E-westernEurope.jpg"
+#EUMETSAT_LAST="http://oiswww.eumetsat.org/IPPS/html/latestImages/EUMETSAT_MSG_IR039_WesternEurope.jpg"
 ```
 
 **The meteostationWEB user interface**
